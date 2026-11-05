@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  owner
+  admin
+  member
+  viewer
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  password  String?
+  role      Role      @default(member)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Idea      Idea[]
+  Vote      Vote[]
+  Comment   Comment[]
+}
+
+model Idea {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  authorId String
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  Vote     Vote[]
+  Comment  Comment[]
+}
+
+model Vote {
+  id     String @id @default(uuid())
+  userId String
+  ideaId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, ideaId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  ideaId String
+  idea   Idea   @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+}
